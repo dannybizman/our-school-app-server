@@ -22,6 +22,8 @@ const StudentSchema = new mongoose.Schema({
       },
     },
    bloodType: String,
+   school: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true },
+
    sex: { type: String, enum: ["MALE", "FEMALE"], required: true },
    createdAt: { type: Date, default: Date.now },
    classId: { type: mongoose.Schema.Types.ObjectId, ref: "Class" },

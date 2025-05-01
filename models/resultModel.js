@@ -8,7 +8,7 @@ const ResultSchema = new mongoose.Schema({
   examScore: { type: Number, default: 0 },
   testScore: { type: Number, default: 0 },
   assignmentScore: { type: Number, default: 0 },
-
+  school: { type: mongoose.Schema.Types.ObjectId, ref: "School" },
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -10,7 +10,7 @@ const TeacherSchema = new mongoose.Schema({
   },
    lastName: {  type: String,
    required: true,
-   trim: true,
+   trim: true, 
    maxLength: 32,
  },
    email: {  type: String,
@@ -47,6 +47,7 @@ const TeacherSchema = new mongoose.Schema({
     type: Date,
     trim: true,
   },
+  school: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true },
    createdAt: { type: Date, default: Date.now },
    subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
    role: { type: String, enum: ["teacher"], default: "teacher" }

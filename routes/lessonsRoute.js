@@ -2,11 +2,12 @@ const router = require("express").Router();
 const Lesson = require("../models/lessonModel");
 const authorizeRoles = require("../middleware/authorizeRoles");
 
-router.post("/create", authorizeRoles(["teacher"]), async (req, res) => {
+router.post("/create", authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
-    const lesson = new Lesson(req.body);
+    const lesson = new Lesson( {    ...req.body,
+      school: req.user.school,});
     const savedLesson = await lesson.save();
-    const populated = await Lesson.findById(savedLesson._id).populate("subjectId classId teacherId");
+    const populated = await Lesson.findById(savedLesson._id).populate("subjectId classId teacherId school") ;
     res.status(201).json({ success: true, lesson: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -14,18 +15,18 @@ router.post("/create", authorizeRoles(["teacher"]), async (req, res) => {
 });
 
 
-router.get("/all", authorizeRoles(["teacher", "student", "parent"]), async (req, res) => {
+router.get("/all", authorizeRoles(["admin", "teacher", "student", "parent"]), async (req, res) => {
   try {
-    const lessons = await Lesson.find().populate("subjectId classId teacherId");
+    const lessons = await Lesson.find({ school: req.user.school }).populate("subjectId classId teacherId school");
     res.json({ success: true, lessons });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-router.get("/:id", authorizeRoles(["teacher", "student", "parent"]), async (req, res) => {
+router.get("/:id", authorizeRoles(["admin", "teacher", "student", "parent"]), async (req, res) => {
   try {
-    const lesson = await Lesson.findById(req.params.id).populate("subjectId classId teacherId");
+    const lesson = await Lesson.findById(req.params.id).populate("subjectId classId teacherId school");
     if (!lesson) return res.status(404).json({ success: false, message: "Lesson not found" });
     res.json({ success: true, lesson });
   } catch (error) {
@@ -33,7 +34,7 @@ router.get("/:id", authorizeRoles(["teacher", "student", "parent"]), async (req,
   }
 });
 
-router.put("/update/:id", authorizeRoles(["teacher"]), async (req, res) => {
+router.put("/update/:id", authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
     const updatedLesson = await Lesson.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updatedLesson) return res.status(404).json({ success: false, message: "Lesson not found" });

@@ -2,11 +2,12 @@ const router = require("express").Router();
 const Attendance = require("../models/attendanceModel");
 const authorizeRoles = require("../middleware/authorizeRoles");
 
-router.post("/create", authorizeRoles(["teacher"]), async (req, res) => {
+router.post("/create", authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
-    const attendance = new Attendance(req.body);
+    const attendance = new Attendance( {    ...req.body,
+      school: req.user.school,});
     const saved = await attendance.save();
-    const populated = await Attendance.findById(saved._id).populate("studentId lessonId");
+    const populated = await Attendance.findById(saved._id).populate("studentId lessonId school");
     res.status(201).json({ success: true, attendance: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -14,10 +15,10 @@ router.post("/create", authorizeRoles(["teacher"]), async (req, res) => {
 });
 
 
-router.get("/all", authorizeRoles(["teacher", "student", "parent"]), async (req, res) => {
+router.get("/all", authorizeRoles(["admin", "teacher", "student", "parent"]), async (req, res) => {
   try {
-    const records = await Attendance.find()
-      .populate("studentId")
+    const records = await Attendance.find({ school: req.user.school })
+      .populate("studentId school")
       .populate({
         path: "lessonId",
         populate: {
@@ -33,9 +34,9 @@ router.get("/all", authorizeRoles(["teacher", "student", "parent"]), async (req,
 });
 
 
-router.get("/:id", authorizeRoles(["teacher", "student", "parent"]), async (req, res) => {
+router.get("/:id", authorizeRoles(["admin", "teacher", "student", "parent"]), async (req, res) => {
   try {
-    const record = await Attendance.findById(req.params.id).populate("studentId lessonId");
+    const record = await Attendance.findById(req.params.id).populate("studentId lessonId school");
     if (!record) return res.status(404).json({ success: false, message: "Attendance not found" });
     res.json({ success: true, attendance: record });
   } catch (error) {
@@ -43,7 +44,7 @@ router.get("/:id", authorizeRoles(["teacher", "student", "parent"]), async (req,
   }
 });
 
-router.put("/update/:id", authorizeRoles(["teacher", "student"]), async (req, res) => {
+router.put("/update/:id", authorizeRoles(["admin", "teacher", "student"]), async (req, res) => {
   try {
     const updated = await Attendance.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updated) return res.status(404).json({ success: false, message: "Attendance not found" });

@@ -1,31 +1,38 @@
-
 const jwt = require("jsonwebtoken");
+const Admin = require("../models/adminModel");
 
-module.exports = (allowedRoles = []) => {
-  return (req, res, next) => {
-    const authHeader = req.header("Authorization");
+const authorizeRoles = (roles) => {
+  return async (req, res, next) => {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ success: false, message: "Access denied. Invalid or missing token." });
+    if (!token) {
+      return res.status(401).json({ success: false, message: "No token provided." });
     }
 
-    const token = authHeader.split(" ")[1];
-
     try {
-      const verified = jwt.verify(token, process.env.JWT_SECRET);
-      const userRole = verified.role;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await Admin.findById(decoded.id).select("-password");
 
-      if (userRole !== "admin" && !allowedRoles.includes(userRole)) {
-        return res.status(403).json({ success: false, message: "Access forbidden: insufficient permissions." });
+      if (!user || !roles.includes(user.role)) {
+        return res.status(403).json({ success: false, message: "Not authorized." });
       }
 
-      req.user = verified;
+     
+      req.user = {
+        id: user._id,
+        role: user.role,
+        school: user.school,
+      };
+
       next();
     } catch (error) {
-      return res.status(401).json({ success: false, message: "Invalid or expired token." });
+      res.status(401).json({ success: false, message: "Invalid token." });
     }
   };
 };
+
+module.exports = authorizeRoles;
+
 
 
 

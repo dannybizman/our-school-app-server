@@ -11,6 +11,7 @@ const LessonSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
+  school: { type: mongoose.Schema.Types.ObjectId, ref: "School" },
    subjectId: { type: mongoose.Schema.Types.ObjectId, ref: "Subject" },
    classId: { type: mongoose.Schema.Types.ObjectId, ref: "Class" },
    teacherId: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher" },

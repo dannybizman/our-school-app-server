@@ -45,6 +45,7 @@ const AdminSchema = new mongoose.Schema(
       type: Date,
       trim: true,
     },
+    school: { type: mongoose.Schema.Types.ObjectId, ref: "School" },
 
     password: {
       type: String,

@@ -4,10 +4,11 @@ const authorizeRoles = require("../middleware/authorizeRoles");
 const Teacher = require("../models/teacherModel");
 
 // Create a Class
-router.post("/create", authorizeRoles(["teacher"]), async (req, res) => {
+router.post("/create", authorizeRoles(["admin","teacher"]), async (req, res) => {
   try {
-    const created = await Class.create(req.body);
-    const populated = await Class.findById(created._id).populate("supervisorId");
+    const created = await Class.create( {    ...req.body,
+      school: req.user.school,});
+    const populated = await Class.findById(created._id).populate("supervisorId school");
     res.status(201).json({ success: true, class: populated }); // Fixed variable
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -17,9 +18,9 @@ router.post("/create", authorizeRoles(["teacher"]), async (req, res) => {
 
 
 // Get All Classes
-router.get("/all", authorizeRoles(["teacher", "student", "parent"]), async (req, res) => {
+router.get("/all", authorizeRoles(["admin", "teacher", "student", "parent"]), async (req, res) => {
   try {
-    const classes = await Class.find().populate("supervisorId");
+    const classes = await Class.find({ school: req.user.school }).populate("supervisorId school");
     res.json({ success: true, classes });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -27,9 +28,9 @@ router.get("/all", authorizeRoles(["teacher", "student", "parent"]), async (req,
 }); 
 
 // Get Class by ID
-router.get("/:id", authorizeRoles(["teacher", "student", "parent"]), async (req, res) => {
+router.get("/:id", authorizeRoles(["admin", "teacher", "student", "parent"]), async (req, res) => {
   try {
-    const classData = await Class.findById(req.params.id).populate("supervisorId");
+    const classData = await Class.findById(req.params.id).populate("supervisorId school");
     if (!classData) return res.status(404).json({ success: false, message: "Class not found" });
 
     res.json({ success: true, class: classData });
@@ -39,7 +40,7 @@ router.get("/:id", authorizeRoles(["teacher", "student", "parent"]), async (req,
 });
 
 // Update Class
-router.put("/update/:id", authorizeRoles(["teacher"]), async (req, res) => {
+router.put("/update/:id", authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
     // Find the existing class before updating it
     const existingClass = await Class.findById(req.params.id);

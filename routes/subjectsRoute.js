@@ -3,31 +3,34 @@ const Subject = require("../models/subjectModel");
 const authorizeRoles = require("../middleware/authorizeRoles");
 
 
-router.post("/create", authorizeRoles(["teacher"]), async (req, res) => {
+router.post("/create", authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
-   
-    // Create and save the subject
-    const subject = new Subject(req.body); 
-    const savedSubject = await subject.save();
+    const subject = new Subject({
+      ...req.body,
+      school: req.user.school,  
+    });
 
-    res.status(201).json({ success: true, subject: savedSubject });
+    const savedSubject = await subject.save();
+    const populated = await Subject.findById(savedSubject._id).populate("school");
+
+    res.status(201).json({ success: true, subject: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-router.get("/all", authorizeRoles(["teacher", "student", "parent"]), async (req, res) => {
+router.get("/all", authorizeRoles([ "admin", "teacher", "student", "parent"]), async (req, res) => {
   try {
-    const subjects = await Subject.find();
+    const subjects = await Subject.find({ school: req.user.school }).populate("school");
     res.json({ success: true, subjects });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-router.get("/:id",  authorizeRoles(["teacher", "student", "parent"]), async (req, res) => {
+router.get("/:id",  authorizeRoles(["admin", "teacher", "student", "parent"]), async (req, res) => {
   try {
-    const subject = await Subject.findById(req.params.id);
+    const subject = await Subject.findById(req.params.id).populate("school");
     if (!subject) return res.status(404).json({ success: false, message: "Subject not found" });
     res.json({ success: true, subject });
   } catch (error) {
@@ -35,10 +38,10 @@ router.get("/:id",  authorizeRoles(["teacher", "student", "parent"]), async (req
   }
 });
 
-router.put("/update/:id", authorizeRoles(["teacher"]), async (req, res) => {
+router.put("/update/:id", authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
     Subject.findByIdAndUpdate(req.params.id, req.body);
-    const updated = await Subject.findById(req.params.id);
+    const updatedSubject  = await Subject.findById(req.params.id);
     res.json({ success: true, subject: updatedSubject });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

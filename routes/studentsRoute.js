@@ -16,7 +16,7 @@ cloudinary.config({
 
 module.exports = (upload) => {
    // Update Student Profile (with avatar upload)
-   router.put("/update-profile", authorizeRoles(["student"]),  upload.single("avatar"), async (req, res) => {
+   router.put("/update-profile", authorizeRoles(["student", "admin"]),  upload.single("avatar"), async (req, res) => {
      try {
        const { name, surname, phone, address, password } = req.body;
        let updatedFields = { name, surname, phone, address };
@@ -24,7 +24,7 @@ module.exports = (upload) => {
        // Handle avatar upload
        if (req.file) {
          const uploadResult = await new Promise((resolve, reject) => {
-           cloudinary.v2.uploader.upload_stream({ folder: "user-avatars" }, (error, result) => {
+           cloudinary.v2.uploader.upload_stream({ folder: "student-avatars" }, (error, result) => {
              if (error) reject(error);
              else resolve(result);
            }).end(req.file.buffer);
@@ -54,13 +54,13 @@ module.exports = (upload) => {
 router.post("/login", async (req, res) => {
    try {
      const { email, password } = req.body;
-     const student = await Student.findOne({ email });
+     const student = await Student.findOne({ email }).populate("school");
  
      if (!student || !(await bcrypt.compare(password, student.password))) {
        return res.status(400).json({ success: false, message: "Invalid credentials." });
      }
  
-     const token = jwt.sign({ id: student._id, role: "student" }, process.env.JWT_SECRET, { expiresIn: "7d" });
+     const token = jwt.sign({ id: student._id, role: "student", school: student.school }, process.env.JWT_SECRET, { expiresIn: "7d" });
      res.json({ success: true, token, student });
    } catch (error) {
      res.status(500).json({ success: false, message: error.message });
@@ -68,9 +68,9 @@ router.post("/login", async (req, res) => {
  });
  
  // Get Logged-in Student
- router.get("/get-logged-in-student", authorizeRoles(["student"]),  async (req, res) => {
+ router.get("/get-logged-in-student", authorizeRoles(["student","admin", "teacher" ]),  async (req, res) => {
    try {
-     const student = await Student.findById(req.user.id).select("-password");
+     const student = await Student.findById(req.user.id).select("-password").populate("school");
      res.json({ success: true, student });
    } catch (error) {
      res.status(500).json({ success: false, message: error.message });
@@ -78,10 +78,11 @@ router.post("/login", async (req, res) => {
  });
 
 // Get All Students
-router.get("/all", authorizeRoles(["teacher","student"]), async (req, res) => {
+router.get("/all", authorizeRoles(["teacher","student", "admin"]), async (req, res) => {
   try {
-    const students = await Student.find()
+    const students = await Student.find({ school: req.user.school })
       .select("-password")
+      .populate("school") 
       .populate("classId", "name gradeLevel");
 
     res.json({ success: true, students });
@@ -92,9 +93,9 @@ router.get("/all", authorizeRoles(["teacher","student"]), async (req, res) => {
 
 
 // Get Student by ID
-router.get("/:id", authorizeRoles(["student"]), async (req, res) => {
+router.get("/:id", authorizeRoles(["student", "admin", "teacher"]), async (req, res) => {
   try {
-    const student = await Student.findById(req.params.id).select("-password");
+    const student = await Student.findById(req.params.id).select("-password").populate("school") ;
     if (!student) return res.status(404).json({ success: false, message: "student not found" });
 
     res.json({ success: true, student });
