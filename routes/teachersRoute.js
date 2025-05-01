@@ -65,7 +65,7 @@ router.post("/login",  async (req, res) => {
  });
   
  // Get Logged-in Teacher
- router.get("/get-logged-in-teacher", authorizeRoles(["admin", "teacher"]), async (req, res) => {
+ router.get("/get-logged-in-teacher", authorizeRoles(["teacher"]), async (req, res) => {
    try {
      const teacher = await Teacher.findById(req.user.id).select("-password").populate("school") ;
      res.json({ success: true, teacher });
@@ -73,6 +73,9 @@ router.post("/login",  async (req, res) => {
      res.status(500).json({ success: false, message: error.message });
    }
  });
+
+
+ 
 
  // Get All Teachers
 router.get("/all", authorizeRoles(["admin", "teacher", "student", "parent"]),  async (req, res) => {
