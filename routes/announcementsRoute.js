@@ -4,10 +4,13 @@ const authorizeRoles = require("../middleware/authorizeRoles");
 
 router.post("/create",  authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
-    const announcement = new Announcement( {    ...req.body,
-      school: req.user.school,});
-    const saved = await announcement.save().populate("school");;
-    res.status(201).json({ success: true, announcement: saved });
+    const announcement = new Announcement( {    
+      ...req.body,
+      school: req.user.school,
+    });
+    const saved = await announcement.save();
+    const populated = await Announcement.findById(saved._id).populate("school");
+    res.status(201).json({ success: true, announcement: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -32,9 +35,9 @@ router.get("/:id",  authorizeRoles(["admin", "teacher", "student", "parent"]), a
   }
 });
 
-router.put("/update/:id",  authorizeRoles(["admin", "teacher"]), async (req, res) => {
+router.put("/:id",  authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
-    const updated = await Announcement.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updated = await Announcement.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate("classes school");
     if (!updated) return res.status(404).json({ success: false, message: "Announcement not found" });
     res.json({ success: true, announcement: updated });
   } catch (error) {
@@ -44,7 +47,7 @@ router.put("/update/:id",  authorizeRoles(["admin", "teacher"]), async (req, res
 
 router.delete("/delete/:id",  authorizeRoles(["admin"]), async (req, res) => {
   try {
-    const deleted = await Announcement.findByIdAndDelete(req.params.id);
+    const deleted = await Announcement.findByIdAndDelete(req.params.id).populate("classes school");
     if (!deleted) return res.status(404).json({ success: false, message: "Announcement not found" });
     res.json({ success: true, message: "Announcement deleted successfully" });
   } catch (error) {

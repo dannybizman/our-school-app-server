@@ -16,7 +16,7 @@ cloudinary.config({
 
 module.exports = (upload) => {
    // Update Student Profile (with avatar upload)
-   router.put("/update-profile", authorizeRoles(["student", "admin"]),  upload.single("avatar"), async (req, res) => {
+   router.put("/:id", authorizeRoles(["student", "admin"]),  upload.single("avatar"), async (req, res) => {
      try {
        const { name, surname, phone, address, password } = req.body;
        let updatedFields = { name, surname, phone, address };
@@ -41,7 +41,7 @@ module.exports = (upload) => {
          updatedFields.password = await bcrypt.hash(password, 10);
        }
  
-       const updatedStudent = await Student.findByIdAndUpdate(req.user.id, updatedFields, { new: true }).select("-password");
+       const updatedStudent = await Student.findByIdAndUpdate(req.user.id, updatedFields, { new: true }).select("-password").populate("school");
  
        res.json({ success: true, student: updatedStudent });
      } catch (error) {
@@ -108,7 +108,7 @@ router.get("/:id", authorizeRoles(["student", "admin", "teacher"]), async (req, 
 // Delete Student (Admin only)
 router.delete("/delete/:id", authorizeRoles(["admin"]),  async (req, res) => {
   try {
-    const deletedStudent = await Student.findByIdAndDelete(req.params.id);
+    const deletedStudent = await Student.findByIdAndDelete(req.params.id).populate("school");
     if (!deletedStudent) return res.status(404).json({ success: false, message: "Student not found" });
 
     res.json({ success: true, message: "Student deleted successfully" });

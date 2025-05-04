@@ -40,7 +40,7 @@ router.get("/:id", authorizeRoles(["admin", "teacher", "student", "parent"]), as
 });
 
 // Update Class
-router.put("/update/:id", authorizeRoles(["admin", "teacher"]), async (req, res) => {
+router.put("/:id", authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
     // Find the existing class before updating it
     const existingClass = await Class.findById(req.params.id);
@@ -48,7 +48,7 @@ router.put("/update/:id", authorizeRoles(["admin", "teacher"]), async (req, res)
       return res.status(404).json({ success: false, message: "Class not found" });
     }
 
-    const updatedClass = await Class.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updatedClass = await Class.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate("school");
     
     // If the supervisor was changed, remove class from the previous supervisor
     if (req.body.supervisorId && req.body.supervisorId !== String(existingClass.supervisorId)) {
@@ -72,7 +72,7 @@ router.put("/update/:id", authorizeRoles(["admin", "teacher"]), async (req, res)
 // Delete Class
 router.delete("/delete/:id", authorizeRoles(["admin"]), async (req, res) => {
   try {
-    const deletedClass = await Class.findByIdAndDelete(req.params.id);
+    const deletedClass = await Class.findByIdAndDelete(req.params.id).populate("supervisorId school");
     if (!deletedClass) return res.status(404).json({ success: false, message: "Class not found" });
 
     res.json({ success: true, message: "Class deleted successfully" });

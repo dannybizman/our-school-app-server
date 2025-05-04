@@ -34,9 +34,9 @@ router.get("/:id", authorizeRoles(["admin","teacher", "student", "parent"]), asy
   }
 });
 
-router.put("/update/:id", authorizeRoles(["admin", "teacher"]), async (req, res) => {
+router.put("/:id", authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
-    const updatedExam = await Exam.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updatedExam = await Exam.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate("subjectId school");
     if (!updatedExam) return res.status(404).json({ success: false, message: "Exam not found" });
     res.json({ success: true, exam: updatedExam });
   } catch (error) {
@@ -46,7 +46,7 @@ router.put("/update/:id", authorizeRoles(["admin", "teacher"]), async (req, res)
 
 router.delete("/delete/:id", authorizeRoles(["admin"]), async (req, res) => {
   try {
-    const deletedExam = await Exam.findByIdAndDelete(req.params.id);
+    const deletedExam = await Exam.findByIdAndDelete(req.params.id).populate("subjectId school");
     if (!deletedExam) return res.status(404).json({ success: false, message: "Exam not found" });
     res.json({ success: true, message: "Exam deleted successfully" });
   } catch (error) {

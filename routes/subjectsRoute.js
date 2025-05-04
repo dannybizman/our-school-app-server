@@ -7,7 +7,7 @@ router.post("/create", authorizeRoles(["admin", "teacher"]), async (req, res) =>
   try {
     const subject = new Subject({
       ...req.body,
-      school: req.user.school,  
+      school: req.user.school,
     });
 
     const savedSubject = await subject.save();
@@ -38,11 +38,11 @@ router.get("/:id",  authorizeRoles(["admin", "teacher", "student", "parent"]), a
   }
 });
 
-router.put("/update/:id", authorizeRoles(["admin", "teacher"]), async (req, res) => {
+router.put("/:id", authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
     Subject.findByIdAndUpdate(req.params.id, req.body);
-    const updatedSubject  = await Subject.findById(req.params.id);
-    res.json({ success: true, subject: updatedSubject });
+    const updatedSubject = await Subject.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate("school");
+res.json({ success: true, subject: updatedSubject });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -51,7 +51,7 @@ router.put("/update/:id", authorizeRoles(["admin", "teacher"]), async (req, res)
 
 router.delete("/delete/:id",  authorizeRoles(["admin"]), async (req, res) => {
   try {
-    const deletedSubject = await Subject.findByIdAndDelete(req.params.id);
+    const deletedSubject = await Subject.findByIdAndDelete(req.params.id).populate("school");
     if (!deletedSubject) return res.status(404).json({ success: false, message: "Subject not found" });
     res.json({ success: true, message: "Subject deleted successfully" });
   } catch (error) {

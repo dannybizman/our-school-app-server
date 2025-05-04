@@ -65,9 +65,9 @@ router.get("/:id", authorizeRoles(["admin", "teacher", "student", "parent"]), as
   }
 });
 
-router.put("/update/:id", authorizeRoles(["admin", "teacher"]), async (req, res) => {
+router.put("/:id", authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
-    const updated = await Result.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updated = await Result.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate("school");
     if (!updated) return res.status(404).json({ success: false, message: "Result not found" });
     res.json({ success: true, result: updated });
   } catch (error) {
@@ -77,7 +77,7 @@ router.put("/update/:id", authorizeRoles(["admin", "teacher"]), async (req, res)
 
 router.delete("/delete/:id", authorizeRoles(["admin"]), async (req, res) => {
   try {
-    const deleted = await Result.findByIdAndDelete(req.params.id);
+    const deleted = await Result.findByIdAndDelete(req.params.id).populate("school");
     if (!deleted) return res.status(404).json({ success: false, message: "Result not found" });
     res.json({ success: true, message: "Result deleted successfully" });
   } catch (error) {

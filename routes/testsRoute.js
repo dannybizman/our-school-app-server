@@ -42,7 +42,7 @@ router.get("/:id",  authorizeRoles(["admin", "teacher", "student", "parent"]), a
   }
 });
 
-router.put("/update/:id",  authorizeRoles(["admin", "teacher"]), async (req, res) => {
+router.put("/:id",  authorizeRoles(["admin", "teacher"]), async (req, res) => {
   try {
     const updated = await Test.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate("lessonId school");
     if (!updated) return res.status(404).json({ success: false, message: "Test not found" });
@@ -54,7 +54,7 @@ router.put("/update/:id",  authorizeRoles(["admin", "teacher"]), async (req, res
 
 router.delete("/delete/:id",  authorizeRoles(["admin"]), async (req, res) => {
   try {
-    const deleted = await Test.findByIdAndDelete(req.params.id);
+    const deleted = await Test.findByIdAndDelete(req.params.id).populate("lessonId school");
     if (!deleted) return res.status(404).json({ success: false, message: "Test not found" });
     res.json({ success: true, message: "Test deleted successfully" });
   } catch (error) {

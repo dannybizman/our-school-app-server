@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const ClassSchema = new mongoose.Schema({
-   name: { type: String, unique: true, required: true },
+   name: { type: String, required: true },
    capacity: Number,
    school: { type: mongoose.Schema.Types.ObjectId, ref: "School" },
    supervisorId: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher" },
@@ -9,5 +9,8 @@ const ClassSchema = new mongoose.Schema({
   
  });
  
+// Compound unique index on (school, name)
+ClassSchema.index({ school: 1, name: 1 }, { unique: true });
+
  module.exports = mongoose.model("Class", ClassSchema); 
     
