@@ -8,7 +8,7 @@ const StudentSchema = new mongoose.Schema({
    password: {
     type: String,
     required: true,
-    min: 6,
+    min: 6, 
     max: 64,
   },
    avatar: {
@@ -23,7 +23,10 @@ const StudentSchema = new mongoose.Schema({
     },
    bloodType: String,
    school: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true },
-
+   birthday: {
+    type: Date,
+    trim: true,
+  },
    sex: { type: String, enum: ["MALE", "FEMALE"], required: true },
    createdAt: { type: Date, default: Date.now },
    classId: { type: mongoose.Schema.Types.ObjectId, ref: "Class" },
